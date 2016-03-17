@@ -1,0 +1,51 @@
+﻿#navigation{
+	width:140px;
+	text-align: center;
+}
+
+#navigation table{
+	width:100%
+}
+
+#navigation input{
+	width:100%
+}
+
+#content{
+	background-color: white;
+	padding: 0px;
+    border: 1.5px solid grey;
+    margin: 0px;
+    display: block;
+}
+
+.square{
+	background-color: red;
+    padding: 0px;
+    border-width: 0px;
+    display: inline-block;
+    margin: 0px;
+}
+
+#content > tr {
+	margin: 0px;
+	padding: 0px;
+    border-width: 0px;
+    display: block;
+}
+
+span {
+	color: white;
+	width: 140px;
+	display: block;
+}
+
+img{
+	height: 100%;
+	width: 100%;
+	
+	}
+
+ #art {
+ 	position: fixed;
+ }

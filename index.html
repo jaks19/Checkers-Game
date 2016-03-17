@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+
+<!--
+  COLLABORATORS: I DID NOT COLLABORATE WITH ANYBODY
+  
+-->
+<html>
+
+<head>
+<meta charset="UTF-8">
+<title>Checkerboard</title>
+
+<!-- Load style sheets -->
+<link rel="stylesheet" href="mainLayout.css" />
+</head>
+<body>
+<table id="mainTable">
+    <tr>
+        <td id="navigation">
+          <table>
+			  <tr><td><span></span></td></tr>
+              <tr><td><input id="btnNewGame" type="button" name="new" value="New Game"/></td></tr>
+              <tr><td><input id="btnAutoMove" type="button" name="new" value="Auto Move"/></td></tr>
+            </table>
+        </td>
+        <td id="content">
+			<canvas id="art" width="400px" height="400px"></canvas>
+				<!-- Your code here --> 
+        </td>
+    </tr>
+</table>
+<!-- Load any supplemental Javascript libraries here -->
+<script type="text/javascript" src="external_js/jquery-1.9.0.min.js"></script>
+<script type="text/javascript" src="checker.js"></script>
+<script type="text/javascript" src="boardEvent.js"></script>
+<script type="text/javascript" src="board.js"></script>
+<script type="text/javascript" src="rules.js"></script>
+
+<script type="text/javascript">
+//This script extracts parameters from the URL
+//from jquery-howto.blogspot.com
+    $.extend({
+        getUrlVars : function() {
+            var vars = [], hash;
+            var hashes = window.location.href.slice(
+                    window.location.href.indexOf('?') + 1).split('&');
+            for ( var i = 0; i < hashes.length; i++) {
+                hash = hashes[i].split('=');
+                vars.push(hash[0]);
+                vars[hash[0]] = hash[1];
+            }
+            return vars;
+        },
+        getUrlVar : function(name) {
+            return $.getUrlVars()[name];
+        }
+    });
+
+    var DEFAULT_BOARD_SIZE = 8;
+
+    //data model
+    var board;
+    var rules;
+    var whoseTurn = "red"; 
+    //global variables declared by me for use in board rep   
+    var sizeN; 
+    var canvas = document.getElementById("art");
+    var ctxt = canvas.getContext('2d');
+
+    var directionOf = function(color) {
+      if (color == "black") {
+        return -1;
+      }
+      return 1;
+    }
+
+    // Fill in this function to toggle the display for whose turn
+    // The color parameter should be either "black" or "red"
+    var toggleTurn = function(color) {
+        //If curret turn is ref
+        if (color == "red"){
+            whoseTurn = "black";
+            $("span").text("Black Turn");
+            $("span").css("background", "black");
+        }
+        //If current turn is black
+        else {
+            whoseTurn = "red";
+            $("span").text("Red Turn");
+            $("span").css("background", "red");
+
+        }
+    }
+
+    // This allows the Javascript code inside this block to only run when the page
+    // has finished loading in the browser.
+    $(document).ready(function() {
+
+        if ($.getUrlVar('size') && $.getUrlVar('size') >= 6) {
+            board = new Board($.getUrlVar('size'));
+        } else {
+            board = new Board(DEFAULT_BOARD_SIZE);
+        }
+
+//------------------------------My Code to make board have n x n squares in color-------------------------------------------
+
+        sizeN = DEFAULT_BOARD_SIZE; //sizeN is the number of squares per row
+
+        //If have size in URL, pick it
+        if ($.getUrlVar('size') && $.getUrlVar('size') >= 6) {
+            sizeN = $.getUrlVar('size');
+        }
+
+        //Make the #content box be 400x400px
+        $("#content").css("width", "400px");
+        $("#content").css("height", "400px");
+
+        //sizeDraw is the length of a square in px
+        var sizeDraw = 400 / sizeN;
+
+        //populate #content with sizeN tr's and each tr with sizeN td's
+        for (var numSquares = sizeN; numSquares > 0; numSquares --){
+            var tr = document.createElement("tr");
+            $("#content").append(tr);
+        }
+        //fix size of these added elements
+        $("#content tr").css("width", 400);
+        $("#content tr").css("height", sizeDraw);
+
+        //Add td's to those tr's
+        for (var numSquares = sizeN; numSquares >= 1; numSquares --){
+            var td = document.createElement("td");
+            $("#content tr").append(td);
+        }
+
+        //Make each td representing a square have CSS class 'square' for them to be stuck to each other
+        $("#content tr td").addClass("square");
+        
+        //Adjust height and weight here because these are dynamically determined
+        $(".square").css("width", sizeDraw);
+        $(".square").css("height", sizeDraw);
+
+        //Algorithm to start with a white square and end up with alternate colors on each square on the grid
+        allSquares = document.querySelectorAll(".square");
+        var rowNum = 0;
+        var i = 0;
+        jQuery.each(allSquares, function(element){
+            if (i % sizeN == 0){
+                rowNum ++;
+            }
+            if (rowNum % 2 == 0){
+                this.style.backgroundColor = (i % 2 == 0) ? "grey" : "white";
+                i ++;
+            }
+            else {
+                this.style.backgroundColor = (i % 2 == 0) ? "white" : "grey";
+                i ++;
+            }
+        });
+        
+//------------------------------------------------------End of My Code -----------------------------------------------------------------------------
+        rules = new Rules(board);
+
+        board.addEventListener('add',function (e) {
+            // Your code here
+        },true);
+
+        board.addEventListener('move',function (e) {
+            // Your code here
+        },true);
+
+        board.addEventListener('remove', function(e) {
+            // Your code here
+        }, true);
+
+        board.addEventListener('promote',function (e) {
+            // Your code here
+        },true);
+
+        
+        $("#btnNewGame").click(function(evt) {
+            //prepare board
+            board.prepareNewGame();
+            //change turn from red to black
+            toggleTurn("red"); 
+            //clear arrow canvas
+            ctxt.clearRect(0, 0, canvas.width, canvas.height);
+            //refresh checker diagrams
+            drawCheckers(board);
+        });
+
+        $("#btnAutoMove").click(function(evt) {
+            //determine current turn
+            var playerColor = whoseTurn;
+            var playerDirection = directionOf(playerColor);
+            var result = rules.makeRandomMove(playerColor, playerDirection);
+            if (result != null) {
+                //refresh display
+                toggleTurn(whoseTurn);
+                drawCheckers(board);
+            }
+            });
+
+        //Preparing a fresh board on load
+        board.prepareNewGame();
+        toggleTurn(whoseTurn);
+
+//----------------------My Code to make pieces appear where board.square entries are not empty----------------------------------------------------------
+   
+    //When run, this function draws all checker objects found in this board on the screen at correct positions
+    function drawCheckers(board){
+        for (var row = 0; row < board.square.length; row ++){
+            for (var col = 0; col < board.square[row].length; col ++){
+                //Need to find rank of this cell in the list of all the squares drawn on grid
+                var tdNum = (row * sizeN) + col;
+                //Clear what was already in each cell
+                ($("#content tr td").eq(tdNum)).html("");
+
+                //If this cell has a checker
+                if (!(board.isEmptyLocation(row, col))){
+                    var checker = board.getCheckerAt(row, col);
+                    
+                    var img = $('<img>'); //Equivalent: $(document.createElement('img'))
+                    //img.attr("class", "checker");
+                    img.appendTo($("#content tr td").eq(tdNum));
+                    if (checker.color == "red"){
+                        if (checker.isKing){
+                            img.attr('src', "graphics/red-king.png");
+                        }
+                        else{
+                            img.attr('src', "graphics/red-piece.png");
+                        }
+                    }       
+                    else {
+                        if (checker.isKing){
+                            img.attr('src', "graphics/black-king.png");
+                        }
+                        else{
+                        img.attr('src', "graphics/black-piece.png");
+                            }
+                    }
+                }
+            }
+        }        
+    }
+    drawCheckers(board);
+  
+//----------------------------------------------------End of My Code------------------------------------------------------------------------
+    });
+</script>
+
+</body>
+
+</html>
